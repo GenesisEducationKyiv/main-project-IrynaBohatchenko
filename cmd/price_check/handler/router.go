@@ -16,9 +16,9 @@ func MakeRouter(_ context.Context, handler *BtcPrice) http.Handler {
 	router.Use(middleware.Timeout(30 * time.Second)) //nolint:gomnd
 
 	router.Route("/api", func(r chi.Router) {
-		r.Get("/rate", handler.HandleRate)
-		r.Post("/subscribe", handler.HandleSubscribe)
-		r.Get("/sendEmails", handler.HandleSendEmails)
+		r.Get("/rate", handler.handleRate)
+		r.Post("/subscribe", handler.handleSubscribe)
+		r.Get("/sendEmails", handler.handleSendEmails)
 	})
 
 	return router

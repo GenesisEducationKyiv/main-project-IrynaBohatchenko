@@ -5,7 +5,6 @@ import "time"
 type Config struct {
 	Port          string        `env:"PORT"           envDefault:":8080"`
 	ServerTimeout time.Duration `env:"SERVER_TIMEOUT" envDefault:"10s"`
-	ClientTimeout time.Duration `env:"CLIENT_TIMEOUT" envDefault:"30s"`
 	Coingecko     Coingecko
 	EmailStorage  FileStorage
 }
@@ -15,5 +14,5 @@ type Coingecko struct {
 }
 
 type FileStorage struct {
-	Path string `env:"PATH" envDefault:"./emails.txt"`
+	Path string `env:"FILE_PATH" envDefault:"./emails.txt"`
 }

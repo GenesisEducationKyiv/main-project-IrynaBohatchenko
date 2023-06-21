@@ -34,17 +34,6 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync() //nolint:errcheck
 
-	errCh := make(chan error)
-
-	_, err := os.Stat(cfg.EmailStorage.Path)
-	if err != nil {
-		file, err := os.Create(cfg.EmailStorage.Path)
-		defer file.Close()
-		if err != nil {
-			errCh <- err
-		}
-	}
-
 	btcPriceSrv := btcpriceservice.NewService(
 		coingeckoclient.NewClient(cfg.Coingecko.RatePath),
 		emailstorage.NewStorage(cfg.EmailStorage.Path),
@@ -62,6 +51,17 @@ func main() {
 		WriteTimeout:   cfg.ServerTimeout,
 		IdleTimeout:    cfg.ServerTimeout,
 		MaxHeaderBytes: http.DefaultMaxHeaderBytes,
+	}
+
+	errCh := make(chan error)
+
+	_, err := os.Stat(cfg.EmailStorage.Path)
+	if err != nil {
+		file, errF := os.Create(cfg.EmailStorage.Path)
+		defer file.Close()
+		if errF != nil {
+			logger.Fatal("create file", zap.Error(errF))
+		}
 	}
 
 	go func() {

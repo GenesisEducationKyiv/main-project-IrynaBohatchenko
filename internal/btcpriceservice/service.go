@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/btc-price/internal/storageerrors"
-
 	"github.com/btc-price/pkg/btcpricelb"
 )
 
@@ -45,10 +43,6 @@ func (s *Service) HandleRate(ctx context.Context) (btcpricelb.RateResponse, erro
 }
 
 func (s *Service) HandleSubscribe(ctx context.Context, email string) error {
-	if ok := s.emailStorage.ReadOneEmail(ctx, btcpricelb.Email(email)); ok {
-		return storageerrors.ErrEmailExists
-	}
-
 	if err := s.emailStorage.AddEmail(ctx, btcpricelb.Email(email)); err != nil {
 		return fmt.Errorf("error adding email %w", err)
 	}
