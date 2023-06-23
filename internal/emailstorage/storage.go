@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/mail"
 	"os"
 	"strings"
 
@@ -24,6 +25,10 @@ func NewStorage(path string) *Storage {
 }
 
 func (s *Storage) AddEmail(ctx context.Context, email btcpricelb.Email) error {
+	if !s.validateEmail(email) {
+		return storageerrors.ErrInvalidEmail
+	}
+
 	if s.ReadOneEmail(ctx, email) {
 		return storageerrors.ErrEmailExists
 	}
@@ -73,4 +78,9 @@ func (s *Storage) ReadAllEmails(_ context.Context) ([]btcpricelb.Email, error) {
 	}
 
 	return emailsList, err
+}
+
+func (s *Storage) validateEmail(email btcpricelb.Email) bool {
+	_, err := mail.ParseAddress(string(email))
+	return err == nil
 }
