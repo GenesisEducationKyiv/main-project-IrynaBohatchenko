@@ -3,7 +3,10 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+
+	"github.com/btc-price/internal/storageerrors"
 
 	"github.com/btc-price/pkg/btcpricelb"
 	"go.uber.org/zap"
@@ -46,7 +49,15 @@ func (b *BtcPrice) handleSubscribe(writer http.ResponseWriter, request *http.Req
 
 	if err := b.srv.HandleSubscribe(request.Context(), email); err != nil {
 		b.logger.Error("error subscribing email", zap.Error(err))
-		b.write(writer, http.StatusConflict, "email already exists")
+
+		status := http.StatusInternalServerError
+		errText := btcpricelb.RespTextSubscrErr
+		if errors.Is(err, storageerrors.ErrEmailExists) {
+			status = http.StatusConflict
+			errText = btcpricelb.RespTextEmailExists
+		}
+
+		b.write(writer, status, errText)
 
 		return
 	}

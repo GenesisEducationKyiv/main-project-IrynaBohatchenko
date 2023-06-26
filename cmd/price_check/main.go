@@ -34,8 +34,10 @@ func main() {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync() //nolint:errcheck
 
+	httpCl := &http.Client{}
+
 	btcPriceSrv := btcpriceservice.NewService(
-		coingeckoclient.NewClient(cfg.Coingecko.RatePath),
+		coingeckoclient.NewClient(cfg.Coingecko.RatePath, httpCl),
 		emailstorage.NewStorage(cfg.EmailStorage.Path),
 		emailsender.NewSender())
 

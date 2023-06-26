@@ -14,9 +14,9 @@ type Client struct {
 	ratePath string
 }
 
-func NewClient(path string) *Client {
+func NewClient(path string, cl *http.Client) *Client {
 	return &Client{
-		client:   &http.Client{},
+		client:   cl,
 		ratePath: path,
 	}
 }
