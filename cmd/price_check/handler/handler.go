@@ -33,9 +33,11 @@ func NewBtcPrice(sr BtcPriceService, logger *zap.Logger) *BtcPrice {
 }
 
 func (b *BtcPrice) handleRate(writer http.ResponseWriter, request *http.Request) {
+	logger := b.logger.Named("rate handler")
+
 	resp, err := b.srv.HandleRate(request.Context())
 	if err != nil {
-		b.logger.Error("error getting rate", zap.Error(err))
+		logger.Error("error getting rate", zap.Error(err))
 		b.write(writer, http.StatusBadRequest, "error getting rate")
 
 		return
@@ -45,10 +47,12 @@ func (b *BtcPrice) handleRate(writer http.ResponseWriter, request *http.Request)
 }
 
 func (b *BtcPrice) handleSubscribe(writer http.ResponseWriter, request *http.Request) {
+	logger := b.logger.Named("subscription handler")
+
 	email := request.FormValue(btcpricelb.EmailForm)
 
 	if err := b.srv.HandleSubscribe(request.Context(), email); err != nil {
-		b.logger.Error("error subscribing email", zap.Error(err))
+		logger.Error("error subscribing email", zap.Error(err))
 
 		status := http.StatusInternalServerError
 		errText := btcpricelb.RespTextSubscrErr
@@ -66,8 +70,10 @@ func (b *BtcPrice) handleSubscribe(writer http.ResponseWriter, request *http.Req
 }
 
 func (b *BtcPrice) handleSendEmails(writer http.ResponseWriter, request *http.Request) {
+	logger := b.logger.Named("send emails handler")
+
 	if err := b.srv.HandleSendEmails(request.Context()); err != nil {
-		b.logger.Error("error sending emails", zap.Error(err))
+		logger.Error("error sending emails", zap.Error(err))
 
 		return
 	}
