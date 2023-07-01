@@ -19,7 +19,7 @@ type (
 	}
 
 	BtcPriceService interface {
-		HandleRate(ctx context.Context) (btcpricelb.RateResponse, error)
+		HandleRate(ctx context.Context, marketCurr string, baseCurr string) (btcpricelb.RateResponse, error)
 		HandleSubscribe(ctx context.Context, email string) error
 		HandleSendEmails(ctx context.Context) error
 	}
@@ -35,7 +35,7 @@ func NewBtcPrice(sr BtcPriceService, logger *zap.Logger) *BtcPrice {
 func (b *BtcPrice) handleRate(writer http.ResponseWriter, request *http.Request) {
 	logger := b.logger.Named("rate handler")
 
-	resp, err := b.srv.HandleRate(request.Context())
+	resp, err := b.srv.HandleRate(request.Context(), "bitcoin", "uah")
 	if err != nil {
 		logger.Error("error getting rate", zap.Error(err))
 		b.write(writer, http.StatusBadRequest, "error getting rate")

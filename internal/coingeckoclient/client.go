@@ -3,8 +3,10 @@ package coingeckoclient
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/btc-price/pkg/btcpricelb"
 )
@@ -21,8 +23,13 @@ func NewClient(path string, cl *http.Client) *Client {
 	}
 }
 
-func (c *Client) GetRate(ctx context.Context) (btcpricelb.CoingeckoRate, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.ratePath, nil)
+func (c *Client) GetRate(ctx context.Context, marketCurr string, baseCurr string) (btcpricelb.CoingeckoRate, error) {
+	q := url.Values{}
+	q.Set("ids", marketCurr)
+	q.Set("vs_currencies", baseCurr)
+	path := fmt.Sprintf("%s?%s", c.ratePath, q.Encode())
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return 0, err
 	}

@@ -15,7 +15,7 @@ type (
 	}
 
 	CoingeckoClient interface {
-		GetRate(ctx context.Context) (btcpricelb.CoingeckoRate, error)
+		GetRate(ctx context.Context, marketCurr string, baseCurr string) (btcpricelb.CoingeckoRate, error)
 	}
 
 	EmailStorage interface {
@@ -33,8 +33,8 @@ func NewService(coingecko CoingeckoClient, emailStorage EmailStorage, emailSende
 	return &Service{coingecko: coingecko, emailStorage: emailStorage, emailSender: emailSender}
 }
 
-func (s *Service) HandleRate(ctx context.Context) (btcpricelb.RateResponse, error) {
-	rate, err := s.coingecko.GetRate(ctx)
+func (s *Service) HandleRate(ctx context.Context, marketCurr string, baseCurr string) (btcpricelb.RateResponse, error) {
+	rate, err := s.coingecko.GetRate(ctx, marketCurr, baseCurr)
 	if err != nil {
 		return btcpricelb.RateResponse{}, fmt.Errorf("get rate: %w", err)
 	}
