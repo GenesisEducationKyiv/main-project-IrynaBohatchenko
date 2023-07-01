@@ -1,0 +1,116 @@
+run:
+  concurrency: 8
+  deadline: 10m
+  issues-exit-code: 1
+  tests: true
+
+output:
+  sort-results: true
+
+linters-settings:
+  govet:
+    check-shadowing: true
+  goconst:
+    min-len: 2
+    min-occurrences: 1
+  misspell:
+    locale: US
+  gomnd:
+    ignored-numbers:
+      - '0666'
+
+linters:
+  disable-all: true
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - containedctx
+    - contextcheck
+    - deadcode
+    - decorder
+    - dogsled
+    - dupl
+    - dupword
+    - durationcheck
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - execinquery
+    - exportloopref
+    - forbidigo
+    - forcetypeassert
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gochecknoinits
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godox
+    - goerr113
+    - gofmt
+    - goheader
+    - goimports
+    - golint
+    - gomnd
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - gosmopolitan
+    - govet
+    - grouper
+    - ifshort
+    - importas
+    - ineffassign
+    - interfacebloat
+    - interfacer
+    - ireturn
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - maligned
+    - mirror
+    - misspell
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - prealloc
+    - predeclared
+    - promlinter
+    - reassign
+    - revive
+    - rowserrcheck
+    - scopelint
+    - structcheck
+    - stylecheck
+    - tagalign
+    - tenv
+    - testableexamples
+    - testpackage
+    - thelper
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - varcheck
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - zerologlint
