@@ -58,7 +58,7 @@ func (s *Storage) ReadOneEmail(_ context.Context, email btcpricelb.Email) bool {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), string(email)) {
+		if strings.EqualFold(scanner.Text(), string(email)) {
 			return true
 		}
 	}

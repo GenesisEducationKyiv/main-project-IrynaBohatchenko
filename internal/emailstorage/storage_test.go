@@ -1,4 +1,5 @@
-// unit test of validator
+//go:build !integration
+
 package emailstorage
 
 import (
@@ -8,36 +9,30 @@ import (
 )
 
 func TestStorage_validateEmail(t *testing.T) {
-	type fields struct {
-		path string
-	}
+	t.Parallel()
+
 	type args struct {
 		email btcpricelb.Email
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
+		name string
+		args args
+		want bool
 	}{
 		{
-			name:   "valid email",
-			fields: fields{path: "./emails_test.txt"},
-			args:   args{email: "test_email@gmail.com"},
-			want:   true,
+			name: "valid email",
+			args: args{email: "test_email@gmail.com"},
+			want: true,
 		},
 		{
-			name:   "invalid email",
-			fields: fields{path: "./emails_test.txt"},
-			args:   args{email: "test_email@"},
-			want:   false,
+			name: "invalid email",
+			args: args{email: "test_email@"},
+			want: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{
-				path: tt.fields.path,
-			}
+			s := &Storage{}
 			assert.Equal(t, tt.want, s.validateEmail(tt.args.email))
 		})
 	}

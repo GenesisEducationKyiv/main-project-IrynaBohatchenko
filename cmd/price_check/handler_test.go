@@ -16,12 +16,19 @@ import (
 	"github.com/btc-price/internal/coingeckoclient"
 	"github.com/btc-price/internal/emailsender"
 	"github.com/btc-price/internal/emailstorage"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 )
 
+type HandlerSuite struct {
+	suite.Suite
+	Server   *httptest.Server
+	Ctx      context.Context
+	FilePath string
+}
+
 func makeTestRouter(cfg Config) http.Handler {
-	logger, _ := zap.NewProduction()
+	logger, _ := zap.NewDevelopment()
 	defer logger.Sync() //nolint:errcheck
 
 	btcPriceSrv := btcpriceservice.NewService(
@@ -38,22 +45,28 @@ func makeTestRouter(cfg Config) http.Handler {
 	return handler.MakeRouter(ctx, btcPriceHndlr)
 }
 
-func Test_handle_rate(t *testing.T) {
-	t.Parallel()
-	cfg := Config{Coingecko: Coingecko{
-		RatePath: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=uah",
-	}}
+func (s *HandlerSuite) SetupSuite() {
+	s.FilePath = "./emails_test.txt"
+	cfg := Config{
+		Coingecko: Coingecko{
+			RatePath: "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=uah",
+		},
+		EmailStorage: FileStorage{Path: s.FilePath},
+	}
+	s.Server = httptest.NewServer(makeTestRouter(cfg))
+	s.Ctx = context.Background()
+}
 
-	tempSrv := httptest.NewServer(makeTestRouter(cfg))
-	t.Cleanup(func() { tempSrv.Close() })
+func (s *HandlerSuite) TearDownSuite() {
+	s.Server.Close()
+}
 
-	t.Run("check getting rate", func(t *testing.T) {
-		t.Parallel()
-
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/api/rate", tempSrv.URL), nil)
+func (s *HandlerSuite) TestHandleRate() {
+	s.Run("check getting rate", func() {
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/api/rate", s.Server.URL), nil)
 
 		if err != nil {
-			t.Fatalf("new rate request %v", err)
+			s.FailNowf("", "new rate request %s", err.Error())
 		}
 
 		client := &http.Client{}
@@ -61,57 +74,67 @@ func Test_handle_rate(t *testing.T) {
 		resp, err := client.Do(req.WithContext(context.Background()))
 
 		if err != nil {
-			t.Fatalf("getting rate %v", err)
+			s.FailNowf("", "getting rate %s", err.Error())
 		}
 
 		defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		s.Equal(http.StatusOK, resp.StatusCode)
 	})
 }
 
-func Test_handle_subscribe(t *testing.T) {
-	t.Parallel()
-
-	const filePath = "./emails_test.txt"
-	const email = "test_email@gmail.com"
-
-	cfg := Config{
-		EmailStorage: FileStorage{Path: filePath},
-	}
-
-	tempSrv := httptest.NewServer(makeTestRouter(cfg))
-	t.Cleanup(func() { tempSrv.Close() })
-
-	_, err := os.Create(filePath)
+func (s *HandlerSuite) TestHandleSubscribe() {
+	_, err := os.Create(s.FilePath)
 	if err != nil {
-		t.Fatalf("create file %s", err)
+		s.FailNowf("", "create file %s", err.Error())
 	}
-	defer os.Remove(filePath)
+	defer os.Remove(s.FilePath)
 
-	t.Run("check subscribing", func(t *testing.T) {
-		t.Parallel()
+	testCases := []struct {
+		name  string
+		email string
+		want  int
+	}{
+		{
+			name:  "successful subscribing",
+			email: "test_email@gmail.com",
+			want:  http.StatusOK,
+		},
+		{
+			name:  "fail subscribing with invalid email",
+			email: "test_email",
+			want:  http.StatusConflict,
+		},
+	}
 
-		data := url.Values{"email": {email}}
-		req, err := http.NewRequest(
-			http.MethodPost,
-			fmt.Sprintf("%s/api/subscribe", tempSrv.URL),
-			bytes.NewBufferString(data.Encode()))
+	for _, tt := range testCases {
+		s.Run(tt.name, func() {
+			data := url.Values{"email": {tt.email}}
+			req, err := http.NewRequest(
+				http.MethodPost,
+				fmt.Sprintf("%s/api/subscribe", s.Server.URL),
+				bytes.NewBufferString(data.Encode()))
 
-		if err != nil {
-			t.Fatalf("new rate request %v", err)
-		}
+			if err != nil {
+				s.FailNowf("", "new subscribe request %s", err.Error())
+			}
 
-		client := &http.Client{}
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			client := &http.Client{}
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-		resp, err := client.Do(req.WithContext(context.Background()))
-		if err != nil {
-			t.Fatalf("Expected no error, got %v", err)
-		}
+			resp, err := client.Do(req.WithContext(context.Background()))
+			if err != nil {
+				s.FailNowf("", "Expected no error, got %s", err.Error())
+			}
 
-		defer resp.Body.Close()
+			defer resp.Body.Close()
 
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
-	})
+			s.Equal(tt.want, resp.StatusCode)
+		})
+	}
+}
+
+func TestHandler(t *testing.T) {
+	t.Parallel()
+	suite.Run(t, new(HandlerSuite))
 }
