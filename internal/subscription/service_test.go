@@ -1,12 +1,12 @@
 //go:build integration
 // +build integration
 
-package btcpriceservice
+package subscription
 
 import (
 	"bufio"
 	"context"
-	"github.com/btc-price/internal/emailstorage"
+	"github.com/btc-price/internal/storage"
 	"github.com/btc-price/internal/storageerrors"
 	"github.com/stretchr/testify/suite"
 	"os"
@@ -23,7 +23,7 @@ type SubscribeSuite struct {
 
 func (s *SubscribeSuite) SetupSuite() {
 	s.FilePath = "./emails_test.txt"
-	s.Service = NewService(nil, emailstorage.NewStorage(s.FilePath), nil)
+	s.Service = NewService(storage.NewStorage(s.FilePath))
 	s.Ctx = context.Background()
 }
 
@@ -81,8 +81,8 @@ func (s *SubscribeSuite) TestRepeatedEmail() {
 		want error
 	}{
 		{
+			name: "write repeated email",
 			args: args{
-				name:          "write repeated email",
 				email:         "test_email@gmail.com",
 				emailRepeated: "test_email@gmail.com",
 			},

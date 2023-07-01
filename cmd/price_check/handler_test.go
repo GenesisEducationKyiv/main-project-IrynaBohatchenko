@@ -11,11 +11,14 @@ import (
 	"os"
 	"testing"
 
+	"github.com/btc-price/internal/mailing"
+	"github.com/btc-price/internal/subscription"
+
 	"github.com/btc-price/cmd/price_check/handler"
-	"github.com/btc-price/internal/btcpriceservice"
 	"github.com/btc-price/internal/coingeckoclient"
 	"github.com/btc-price/internal/emailsender"
-	"github.com/btc-price/internal/emailstorage"
+	"github.com/btc-price/internal/rate"
+	"github.com/btc-price/internal/storage"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 )
@@ -31,13 +34,21 @@ func makeTestRouter(cfg Config) http.Handler {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync() //nolint:errcheck
 
-	btcPriceSrv := btcpriceservice.NewService(
-		coingeckoclient.NewClient(cfg.Coingecko.RatePath),
-		emailstorage.NewStorage(cfg.EmailStorage.Path),
-		emailsender.NewSender())
+	rateSrv := rate.NewService(
+		coingeckoclient.NewClient(cfg.Coingecko.RatePath, &http.Client{}))
+
+	emailStorage := storage.NewStorage(cfg.EmailStorage.Path)
+
+	sbscrSrv := subscription.NewService(emailStorage)
+
+	mailingSrv := mailing.NewService(
+		emailsender.NewSender(),
+		emailStorage)
 
 	btcPriceHndlr := handler.NewBtcPrice(
-		btcPriceSrv,
+		rateSrv,
+		sbscrSrv,
+		mailingSrv,
 		logger)
 
 	ctx := context.Background()
@@ -103,7 +114,7 @@ func (s *HandlerSuite) TestHandleSubscribe() {
 		{
 			name:  "fail subscribing with invalid email",
 			email: "test_email",
-			want:  http.StatusConflict,
+			want:  http.StatusInternalServerError,
 		},
 	}
 
