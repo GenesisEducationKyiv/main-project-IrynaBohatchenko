@@ -4,7 +4,7 @@ type RateResponse struct {
 	Rate float64 `json:"rate"`
 }
 
-type CoingeckoRate float64
+type Rate float64
 
 type CoingeckoResponse struct {
 	Bitcoin struct {
@@ -12,4 +12,6 @@ type CoingeckoResponse struct {
 	} `json:"bitcoin"`
 }
 
-type Email string
+type BinanceResponse struct {
+	Price string `json:"price"`
+}

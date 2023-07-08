@@ -21,7 +21,7 @@ type (
 	}
 
 	RateService interface {
-		HandleRate(ctx context.Context, marketCurr string, baseCurr string) (btcpricelb.RateResponse, error)
+		HandleRate(ctx context.Context, bCurr string, qCurr string) (btcpricelb.RateResponse, error)
 	}
 
 	SubscriptionService interface {
@@ -29,7 +29,7 @@ type (
 	}
 
 	SendService interface {
-		HandleSendEmails(ctx context.Context) error
+		HandleSendEmails(ctx context.Context, bCurr, qCurr string) error
 	}
 )
 
@@ -86,7 +86,7 @@ func (b *BtcPrice) handleSubscribe(writer http.ResponseWriter, request *http.Req
 func (b *BtcPrice) handleSendEmails(writer http.ResponseWriter, request *http.Request) {
 	logger := b.logger.Named("send emails handler")
 
-	if err := b.sendSrv.HandleSendEmails(request.Context()); err != nil {
+	if err := b.sendSrv.HandleSendEmails(request.Context(), "bitcoin", "uah"); err != nil {
 		logger.Error("error sending emails", zap.Error(err))
 
 		return

@@ -1,7 +1,7 @@
 //go:build integration
 // +build integration
 
-package subscription
+package usecase
 
 import (
 	"bufio"
@@ -17,13 +17,13 @@ import (
 type SubscribeSuite struct {
 	suite.Suite
 	FilePath string
-	Service  *Service
+	Service  *SubscriptionService
 	Ctx      context.Context
 }
 
 func (s *SubscribeSuite) SetupSuite() {
 	s.FilePath = "./emails_test.txt"
-	s.Service = NewService(storage.NewStorage(s.FilePath))
+	s.Service = NewSubscriptionService(storage.NewStorage(s.FilePath))
 	s.Ctx = context.Background()
 }
 

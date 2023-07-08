@@ -11,13 +11,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/btc-price/internal/mailing"
-	"github.com/btc-price/internal/subscription"
+	"github.com/btc-price/internal/binanceclient"
+	emailCreatorusecase "github.com/btc-price/internal/usecase/emailCreator"
+	logPrUsecase "github.com/btc-price/internal/usecase/loggingProvider"
+	mailingUsecase "github.com/btc-price/internal/usecase/mailing"
+	prUsecase "github.com/btc-price/internal/usecase/provider"
+	prChainUsecase "github.com/btc-price/internal/usecase/providerChain"
+	rateUsecase "github.com/btc-price/internal/usecase/rate"
+	subscriptionUsecase "github.com/btc-price/internal/usecase/subscription"
+	"github.com/btc-price/pkg/coinconverter"
 
 	"github.com/btc-price/cmd/price_check/handler"
 	"github.com/btc-price/internal/coingeckoclient"
 	"github.com/btc-price/internal/emailsender"
-	"github.com/btc-price/internal/rate"
 	"github.com/btc-price/internal/storage"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
@@ -34,16 +40,30 @@ func makeTestRouter(cfg Config) http.Handler {
 	logger, _ := zap.NewDevelopment()
 	defer logger.Sync() //nolint:errcheck
 
-	rateSrv := rate.NewService(
-		coingeckoclient.NewClient(cfg.Coingecko.RatePath, &http.Client{}))
+	httpCl := &http.Client{}
+	cnv := coinconverter.NewConverter()
+
+	coingeckoCl := coingeckoclient.NewClient(httpCl, cfg.Coingecko.RatePath, cnv)
+	binanceCl := binanceclient.NewClient(httpCl, cfg.Binance.RatePath, cnv)
+
+	binancePrvdr := logPrUsecase.NewLoggingProvider(prUsecase.NewProvider(binanceCl, nil), logger)
+	cngkPrvdr := logPrUsecase.NewLoggingProvider(prUsecase.NewProvider(coingeckoCl, binancePrvdr), logger)
+
+	providersChain := prChainUsecase.NewProvidersChain(cngkPrvdr)
+
+	rateSrv := rateUsecase.NewRateService(providersChain)
 
 	emailStorage := storage.NewStorage(cfg.EmailStorage.Path)
 
-	sbscrSrv := subscription.NewService(emailStorage)
+	sbscrSrv := subscriptionUsecase.NewSubscriptionService(emailStorage)
 
-	mailingSrv := mailing.NewService(
+	ec := emailCreatorusecase.NewEmailCreator(cfg.EmailText.Text)
+
+	mailingSrv := mailingUsecase.NewMailingService(
 		emailsender.NewSender(),
-		emailStorage)
+		emailStorage,
+		providersChain,
+		ec)
 
 	btcPriceHndlr := handler.NewBtcPrice(
 		rateSrv,
