@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/btc-price/internal/storageerrors"
+	"github.com/btc-price/internal/subscription/storageerrors"
 
 	"github.com/btc-price/pkg/btcpricelb"
 	"go.uber.org/zap"

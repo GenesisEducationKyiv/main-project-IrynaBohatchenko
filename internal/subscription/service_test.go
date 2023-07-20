@@ -1,13 +1,13 @@
 //go:build integration
 // +build integration
 
-package usecase
+package subscription
 
 import (
 	"bufio"
 	"context"
-	"github.com/btc-price/internal/storage"
-	"github.com/btc-price/internal/storageerrors"
+	"github.com/btc-price/internal/subscription/storage"
+	"github.com/btc-price/internal/subscription/storageerrors"
 	"github.com/stretchr/testify/suite"
 	"os"
 	"strings"

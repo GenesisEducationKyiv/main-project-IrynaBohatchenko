@@ -12,19 +12,18 @@ import (
 	"testing"
 
 	"github.com/btc-price/internal/binanceclient"
-	emailCreatorusecase "github.com/btc-price/internal/usecase/emailCreator"
-	logPrUsecase "github.com/btc-price/internal/usecase/loggingProvider"
-	mailingUsecase "github.com/btc-price/internal/usecase/mailing"
-	prUsecase "github.com/btc-price/internal/usecase/provider"
-	prChainUsecase "github.com/btc-price/internal/usecase/providerChain"
-	rateUsecase "github.com/btc-price/internal/usecase/rate"
-	subscriptionUsecase "github.com/btc-price/internal/usecase/subscription"
+	"github.com/btc-price/internal/coingeckoclient"
+	"github.com/btc-price/internal/mailing"
+	"github.com/btc-price/internal/mailing/emailcreator"
+	"github.com/btc-price/internal/mailing/emailsender"
+	"github.com/btc-price/internal/rate"
+	"github.com/btc-price/internal/rateprovider"
+	"github.com/btc-price/internal/subscription"
+	"github.com/btc-price/internal/subscription/storage"
+
 	"github.com/btc-price/pkg/coinconverter"
 
 	"github.com/btc-price/cmd/price_check/handler"
-	"github.com/btc-price/internal/coingeckoclient"
-	"github.com/btc-price/internal/emailsender"
-	"github.com/btc-price/internal/storage"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/zap"
 )
@@ -46,23 +45,21 @@ func makeTestRouter(cfg Config) http.Handler {
 	coingeckoCl := coingeckoclient.NewClient(httpCl, cfg.Coingecko.RatePath, cnv)
 	binanceCl := binanceclient.NewClient(httpCl, cfg.Binance.RatePath, cnv)
 
-	binancePrvdr := logPrUsecase.NewLoggingProvider(prUsecase.NewProvider(binanceCl, nil), logger)
-	cngkPrvdr := logPrUsecase.NewLoggingProvider(prUsecase.NewProvider(coingeckoCl, binancePrvdr), logger)
+	binancePrvdr := rateprovider.NewLoggingProvider(rateprovider.NewProvider(binanceCl, nil), logger)
+	cngkPrvdr := rateprovider.NewLoggingProvider(rateprovider.NewProvider(coingeckoCl, binancePrvdr), logger)
 
-	providersChain := prChainUsecase.NewProvidersChain(cngkPrvdr)
-
-	rateSrv := rateUsecase.NewRateService(providersChain)
+	rateSrv := rate.NewRateService(cngkPrvdr)
 
 	emailStorage := storage.NewStorage(cfg.EmailStorage.Path)
 
-	sbscrSrv := subscriptionUsecase.NewSubscriptionService(emailStorage)
+	sbscrSrv := subscription.NewSubscriptionService(emailStorage)
 
-	ec := emailCreatorusecase.NewEmailCreator(cfg.EmailText.Text)
+	ec := emailcreator.NewEmailCreator(cfg.EmailText.Text)
 
-	mailingSrv := mailingUsecase.NewMailingService(
+	mailingSrv := mailing.NewMailingService(
 		emailsender.NewSender(),
 		emailStorage,
-		providersChain,
+		cngkPrvdr,
 		ec)
 
 	btcPriceHndlr := handler.NewBtcPrice(

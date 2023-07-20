@@ -1,25 +1,24 @@
-package usecase
+package rateprovider
 
 import (
 	"context"
 	"fmt"
-	usecase "github.com/btc-price/internal/usecase/providerChain"
 	"github.com/btc-price/pkg/btcpricelb"
 	"go.uber.org/zap"
 	"reflect"
 )
 
 type LoggingProvider struct {
-	provider usecase.Chain
+	provider RateProvider
 	logger   *zap.Logger
 }
 
-func NewLoggingProvider(provider usecase.Chain, logger *zap.Logger) *LoggingProvider {
+func NewLoggingProvider(provider RateProvider, logger *zap.Logger) *LoggingProvider {
 	return &LoggingProvider{provider: provider, logger: logger}
 }
 
-func (l *LoggingProvider) GetRate(ctx context.Context, bCurr string, qCurr string) (btcpricelb.Rate, error) {
-	rate, err := l.provider.GetRate(ctx, bCurr, qCurr)
+func (l *LoggingProvider) GetCurrencyRate(ctx context.Context, bCurr string, qCurr string) (btcpricelb.Rate, error) {
+	rate, err := l.provider.GetCurrencyRate(ctx, bCurr, qCurr)
 	if err != nil {
 		return 0, err
 	}
