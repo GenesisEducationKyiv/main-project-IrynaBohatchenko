@@ -1,20 +1,21 @@
-package usecase
+package mailing
 
 import (
 	"context"
 	"fmt"
 	"github.com/btc-price/internal/models"
+	"github.com/btc-price/internal/rateprovider"
 	"github.com/btc-price/pkg/btcpricelb"
 )
 
 type MailingService struct {
 	sender       Sender
 	storage      EmailStorage
-	rateProvider RateProvider
+	rateProvider rateprovider.RateProvider
 	emailCreator EmailCreator
 }
 
-func NewMailingService(sender Sender, storage EmailStorage, rp RateProvider, ec EmailCreator) *MailingService {
+func NewMailingService(sender Sender, storage EmailStorage, rp rateprovider.RateProvider, ec EmailCreator) *MailingService {
 	return &MailingService{
 		sender:       sender,
 		storage:      storage,
@@ -30,9 +31,7 @@ type Sender interface {
 type EmailStorage interface {
 	GetUsersList(ctx context.Context) ([]*models.User, error)
 }
-type RateProvider interface {
-	GetCurrencyRate(ctx context.Context, bCurr, qCurr string) (btcpricelb.Rate, error)
-}
+
 type EmailCreator interface {
 	GenerateEmail(ctx context.Context, rate btcpricelb.Rate) string
 }

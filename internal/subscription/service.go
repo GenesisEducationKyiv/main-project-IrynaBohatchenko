@@ -1,10 +1,10 @@
-package usecase
+package subscription
 
 import (
 	"context"
 	"fmt"
 	"github.com/btc-price/internal/models"
-	"github.com/btc-price/internal/storageerrors"
+	"github.com/btc-price/internal/subscription/storageerrors"
 	"net/mail"
 )
 

@@ -1,6 +1,6 @@
 //go:build !integration
 
-package usecase
+package subscription
 
 import (
 	"github.com/btc-price/internal/models"

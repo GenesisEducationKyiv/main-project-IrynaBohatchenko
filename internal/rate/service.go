@@ -1,22 +1,19 @@
-package usecase
+package rate
 
 import (
 	"context"
 	"fmt"
+	"github.com/btc-price/internal/rateprovider"
 	"github.com/btc-price/pkg/btcpricelb"
 )
 
 type (
 	RateService struct {
-		rateProvider RateProvider
-	}
-
-	RateProvider interface {
-		GetCurrencyRate(ctx context.Context, bCurr, qCurr string) (btcpricelb.Rate, error)
+		rateProvider rateprovider.RateProvider
 	}
 )
 
-func NewRateService(rp RateProvider) *RateService {
+func NewRateService(rp rateprovider.RateProvider) *RateService {
 	return &RateService{rateProvider: rp}
 }
 
