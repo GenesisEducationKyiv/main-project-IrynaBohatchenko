@@ -59,7 +59,7 @@ func (s *MailingService) HandleSendEmails(ctx context.Context, bCurr, qCurr stri
 func (s *MailingService) getEmailsList(usersList []*models.User) []models.Email {
 	emailsList := []models.Email{}
 	for _, user := range usersList {
-		emailsList = append(emailsList, user.Email)
+		emailsList = append(emailsList, user.GetEmail())
 	}
 
 	return emailsList

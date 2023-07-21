@@ -25,7 +25,7 @@ func (p *Provider) GetRate(ctx context.Context, bCurr string, qCurr string) (btc
 		if p.next == nil {
 			return 0, err
 		}
-		rate, err = p.next.GetRate(ctx, bCurr, qCurr)
+		return p.next.GetRate(ctx, bCurr, qCurr)
 	}
 
 	return rate, nil

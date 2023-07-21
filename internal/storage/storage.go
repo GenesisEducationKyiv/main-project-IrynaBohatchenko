@@ -46,7 +46,7 @@ func (s *Storage) GetUser(_ context.Context, user *models.User) bool {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		if strings.EqualFold(scanner.Text(), string(user.Email)) {
+		if strings.EqualFold(scanner.Text(), string(user.GetEmail())) {
 			return true
 		}
 	}
