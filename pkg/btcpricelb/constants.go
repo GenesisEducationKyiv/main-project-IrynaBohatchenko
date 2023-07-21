@@ -4,3 +4,4 @@ const EmailForm = "email"
 
 const RespTextEmailExists = "Email already exists"
 const RespTextSubscrErr = "Subscription error"
+const RespTextInvalidEmail = "Invalid email"

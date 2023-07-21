@@ -1,6 +1,6 @@
 //go:build !integration
 
-package emailstorage
+package storage
 
 import (
 	"github.com/btc-price/pkg/btcpricelb"

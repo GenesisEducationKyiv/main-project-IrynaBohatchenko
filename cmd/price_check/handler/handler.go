@@ -14,28 +14,42 @@ import (
 
 type (
 	BtcPrice struct {
-		srv    BtcPriceService
-		logger *zap.Logger
+		rateSrv   RateService
+		subscrSrv SubscriptionService
+		sendSrv   SendService
+		logger    *zap.Logger
 	}
 
-	BtcPriceService interface {
+	RateService interface {
 		HandleRate(ctx context.Context, marketCurr string, baseCurr string) (btcpricelb.RateResponse, error)
+	}
+
+	SubscriptionService interface {
 		HandleSubscribe(ctx context.Context, email string) error
+	}
+
+	SendService interface {
 		HandleSendEmails(ctx context.Context) error
 	}
 )
 
-func NewBtcPrice(sr BtcPriceService, logger *zap.Logger) *BtcPrice {
+func NewBtcPrice(
+	rateSrv RateService,
+	sbscrSrv SubscriptionService,
+	sndSrv SendService,
+	logger *zap.Logger) *BtcPrice {
 	return &BtcPrice{
-		srv:    sr,
-		logger: logger,
+		rateSrv:   rateSrv,
+		subscrSrv: sbscrSrv,
+		sendSrv:   sndSrv,
+		logger:    logger,
 	}
 }
 
 func (b *BtcPrice) handleRate(writer http.ResponseWriter, request *http.Request) {
 	logger := b.logger.Named("rate handler")
 
-	resp, err := b.srv.HandleRate(request.Context(), "bitcoin", "uah")
+	resp, err := b.rateSrv.HandleRate(request.Context(), "bitcoin", "uah")
 	if err != nil {
 		logger.Error("error getting rate", zap.Error(err))
 		b.write(writer, http.StatusBadRequest, "error getting rate")
@@ -51,14 +65,18 @@ func (b *BtcPrice) handleSubscribe(writer http.ResponseWriter, request *http.Req
 
 	email := request.FormValue(btcpricelb.EmailForm)
 
-	if err := b.srv.HandleSubscribe(request.Context(), email); err != nil {
+	if err := b.subscrSrv.HandleSubscribe(request.Context(), email); err != nil {
 		logger.Error("error subscribing email", zap.Error(err))
 
 		status := http.StatusInternalServerError
 		errText := btcpricelb.RespTextSubscrErr
-		if errors.Is(err, storageerrors.ErrEmailExists) {
+		switch {
+		case errors.Is(err, storageerrors.ErrEmailExists):
 			status = http.StatusConflict
 			errText = btcpricelb.RespTextEmailExists
+		case errors.Is(err, storageerrors.ErrInvalidEmail):
+			status = http.StatusBadRequest
+			errText = btcpricelb.RespTextInvalidEmail
 		}
 
 		b.write(writer, status, errText)
@@ -72,7 +90,7 @@ func (b *BtcPrice) handleSubscribe(writer http.ResponseWriter, request *http.Req
 func (b *BtcPrice) handleSendEmails(writer http.ResponseWriter, request *http.Request) {
 	logger := b.logger.Named("send emails handler")
 
-	if err := b.srv.HandleSendEmails(request.Context()); err != nil {
+	if err := b.sendSrv.HandleSendEmails(request.Context()); err != nil {
 		logger.Error("error sending emails", zap.Error(err))
 
 		return

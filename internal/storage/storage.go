@@ -1,4 +1,4 @@
-package emailstorage
+package storage
 
 import (
 	"bufio"
