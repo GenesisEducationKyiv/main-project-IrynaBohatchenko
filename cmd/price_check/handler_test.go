@@ -114,7 +114,7 @@ func (s *HandlerSuite) TestHandleSubscribe() {
 		{
 			name:  "fail subscribing with invalid email",
 			email: "test_email",
-			want:  http.StatusInternalServerError,
+			want:  http.StatusBadRequest,
 		},
 	}
 

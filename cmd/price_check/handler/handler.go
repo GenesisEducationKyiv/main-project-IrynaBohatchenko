@@ -70,9 +70,13 @@ func (b *BtcPrice) handleSubscribe(writer http.ResponseWriter, request *http.Req
 
 		status := http.StatusInternalServerError
 		errText := btcpricelb.RespTextSubscrErr
-		if errors.Is(err, storageerrors.ErrEmailExists) {
+		switch {
+		case errors.Is(err, storageerrors.ErrEmailExists):
 			status = http.StatusConflict
 			errText = btcpricelb.RespTextEmailExists
+		case errors.Is(err, storageerrors.ErrInvalidEmail):
+			status = http.StatusBadRequest
+			errText = btcpricelb.RespTextInvalidEmail
 		}
 
 		b.write(writer, status, errText)
