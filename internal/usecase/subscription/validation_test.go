@@ -1,18 +1,18 @@
 //go:build !integration
 
-package storage
+package usecase
 
 import (
-	"github.com/btc-price/pkg/btcpricelb"
+	"github.com/btc-price/internal/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
-func TestStorage_validateEmail(t *testing.T) {
+func TestService_validateEmail(t *testing.T) {
 	t.Parallel()
 
 	type args struct {
-		email btcpricelb.Email
+		email models.Email
 	}
 	tests := []struct {
 		name string
@@ -32,7 +32,7 @@ func TestStorage_validateEmail(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := &Storage{}
+			s := &SubscriptionService{}
 			assert.Equal(t, tt.want, s.validateEmail(tt.args.email))
 		})
 	}

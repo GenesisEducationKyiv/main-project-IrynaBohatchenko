@@ -1,15 +1,16 @@
-package coingeckoclient
+package binanceclient
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/btc-price/pkg/btcpricelb"
 	"github.com/btc-price/pkg/coinconverter"
 	"io"
 	"net/http"
 	"net/url"
-
-	"github.com/btc-price/pkg/btcpricelb"
+	"strconv"
+	"strings"
 )
 
 type Client struct {
@@ -18,18 +19,18 @@ type Client struct {
 	converter *coinconverter.Converter
 }
 
-func NewClient(cl *http.Client, path string, converter *coinconverter.Converter) *Client {
+func NewClient(client *http.Client, ratePath string, converter *coinconverter.Converter) *Client {
 	return &Client{
-		client:    cl,
-		ratePath:  path,
+		client:    client,
+		ratePath:  ratePath,
 		converter: converter,
 	}
 }
 
 func (c *Client) GetRateRequest(ctx context.Context, bCurr string, qCurr string) (btcpricelb.Rate, error) {
+	symbol := strings.ToUpper(fmt.Sprint(c.converter.ConvertBinanceCoins(bCurr), c.converter.ConvertBinanceCoins(qCurr)))
 	q := url.Values{}
-	q.Set("ids", c.converter.ConvertCoingeckoBase(bCurr))
-	q.Set("vs_currencies", c.converter.ConvertCoingeckoQuote(qCurr))
+	q.Set("symbol", symbol)
 	path := fmt.Sprintf("%s?%s", c.ratePath, q.Encode())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, path, nil)
@@ -47,10 +48,15 @@ func (c *Client) GetRateRequest(ctx context.Context, bCurr string, qCurr string)
 		return 0, err
 	}
 
-	var answer btcpricelb.CoingeckoResponse
+	var answer btcpricelb.BinanceResponse
 	if err := json.Unmarshal(answerByte, &answer); err != nil {
 		return 0, err
 	}
 
-	return btcpricelb.Rate(answer.Bitcoin.Uah), nil
+	rate, err := strconv.ParseFloat(answer.Price, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return btcpricelb.Rate(rate), nil
 }
